@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+cff-version: 1.2.0
+message: "If you use crypto-service-sdk-python in research or production write-ups, please cite it as below."
+type: software
+title: "crypto-service-sdk-python: a typed Python client for the Crypto Service REST API"
+abstract: >-
+  An async and blocking Python client for the crypto-server REST API of
+  the Crypto Service suite: hashing, AEAD, server-held Ed25519, ML-KEM,
+  ML-DSA, SLH-DSA, HPKE and KMS keys, with no cryptography in the client.
+  It is proven against the server by the Crypto Service conformance kit.
+authors:
+  - family-names: Rousseau
+    given-names: Sebastien
+version: "0.0.40"
+# Dual-licensed, at the user's option (LICENSE-APACHE, LICENSE-MIT).
+license:
+  - Apache-2.0
+  - MIT
+repository-code: "https://github.com/sebastienrousseau/crypto-service-sdk-python"
+url: "https://crypto-service.co"
+keywords:
+  - cryptography
+  - post-quantum
+  - ml-kem
+  - ml-dsa
+  - hpke
+  - Python
+  - SDK

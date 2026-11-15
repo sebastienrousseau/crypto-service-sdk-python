@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Bug Report
+description: Report a reproducible problem in crypto-service-sdk-python
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public. Use synthetic keys and credentials only: no
+        real keys, tokens or API keys. Report security problems
+        privately, as SECURITY.md describes.
+  - type: input
+    id: version
+    attributes:
+      label: SDK version or commit
+      placeholder: "0.0.40"
+    validations:
+      required: true
+  - type: input
+    id: server_version
+    attributes:
+      label: crypto-server version (GET /)
+      placeholder: "0.0.40"
+    validations:
+      required: true
+  - type: input
+    id: toolchain
+    attributes:
+      label: Python and httpx versions
+      placeholder: "CPython 3.13.1, httpx 0.28.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client
+      options:
+        - AsyncClient
+        - Client (blocking)
+        - Both
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal Reproducible Example
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: error_output
+    attributes:
+      label: Error Output
+      description: The exception type, ApiError.status and problem.type, or the traceback.
+    validations:
+      required: true

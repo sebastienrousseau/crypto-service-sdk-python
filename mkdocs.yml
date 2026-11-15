@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# The manual, built from docs/ by `make docs` (MkDocs Material, strict).
+
+site_name: Crypto Service SDK for Python
+site_description: A typed async and blocking Python client for the Crypto Service REST API.
+site_url: https://sebastienrousseau.github.io/crypto-service-sdk-python/
+copyright: '&copy; 2026 Sebastien Rousseau'
+repo_url: https://github.com/sebastienrousseau/crypto-service-sdk-python
+repo_name: sebastienrousseau/crypto-service-sdk-python
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+strict: true
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Follow the system
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.highlight
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+  - Architecture: ARCHITECTURE.md
+  - Comparison: COMPARISON.md
+  - Benchmarks: BENCHMARKS.md
+  - Policies: POLICIES.md
+  - Roadmap: ROADMAP.md
+  - Decision records:
+      - adr/README.md
+      - adr/0001-thin-client-over-the-server.md
+      - adr/0002-http-stack-httpx.md
+      - adr/0003-error-model.md
+      - adr/0004-async-model.md
+  - Releases:
+      - 0.0.40: releases/0.0.40.md
+  - Project:
+      - README: https://github.com/sebastienrousseau/crypto-service-sdk-python/blob/main/README.md
+      - Development: https://github.com/sebastienrousseau/crypto-service-sdk-python/blob/main/DEVELOPMENT.md
+      - Contributing: https://github.com/sebastienrousseau/crypto-service-sdk-python/blob/main/CONTRIBUTING.md
+      - Changelog: https://github.com/sebastienrousseau/crypto-service-sdk-python/blob/main/CHANGELOG.md
+      - Security: https://github.com/sebastienrousseau/crypto-service-sdk-python/blob/main/SECURITY.md
