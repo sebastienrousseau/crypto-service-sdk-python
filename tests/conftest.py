@@ -66,3 +66,16 @@ async def make_client(kind: str, sleeps: list[float]) -> AsyncIterator[Callable[
     for client in made:
         await call(client.aclose() if kind == "async" else client.close())
 
+
+def pytest_terminal_summary(terminalreporter: Any) -> None:
+    """Count the conformance vectors that ran, when any did."""
+    from .test_conformance import RESULTS
+
+    if not RESULTS:
+        return
+    passed = sum(len(r.passed) for r in RESULTS)
+    total = passed + sum(len(r.failed) for r in RESULTS)
+    terminalreporter.write_line(f"conformance: {passed}/{total} vectors passed")
+    for result in RESULTS:
+        for failure in result.failed:
+            terminalreporter.write_line(f"  {result.name}: {failure}")
