@@ -26,3 +26,5 @@ site/
 .vscode/
 .idea/
 .DS_Store
+# pip-audit input written by `make audit`
+.audit-requirements.txt

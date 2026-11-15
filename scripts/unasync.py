@@ -45,7 +45,9 @@ RULES: tuple[tuple[str, str], ...] = (
 
 def header(name: str) -> str:
     return (
-        "# SPDX-License-Identifier: Apache-2.0 OR MIT\n"
+        # Split so REUSE does not read this literal as this file's licence.
+        "# SPDX"
+        "-License-Identifier: Apache-2.0 OR MIT\n"
         f"# Generated from src/crypto_service/_async/{name} by scripts/unasync.py.\n"
         "# Do not edit: change the async source and run `make unasync`.\n"
     )
