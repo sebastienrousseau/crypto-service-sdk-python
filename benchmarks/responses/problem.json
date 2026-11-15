@@ -1,0 +1,1 @@
+{"type":"urn:crypto-service:problem:validation-failed","title":"Validation failed","status":400,"detail":"body must have required property 'data'","instance":"/v2/hash","errors":[{"field":"/data","message":"must have required property 'data'"}]}
