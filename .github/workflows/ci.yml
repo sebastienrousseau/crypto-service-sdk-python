@@ -142,15 +142,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Pinned server commit
-        id: server
-        run: echo "ref=$(cat ci/server.ref)" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: sebastienrousseau/crypto-service
-          ref: ${{ steps.server.outputs.ref }}
-          path: server
-          persist-credentials: false
+      # ci/server.ref comes from the pull request, so it is checked to be
+      # a full commit SHA and fetched with git rather than handed to
+      # actions/checkout as a ref.
+      - name: Check out crypto-server at the commit in ci/server.ref
+        run: |
+          ref="$(tr -d '[:space:]' < ci/server.ref)"
+          if ! [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ci/server.ref must hold a full 40-character commit SHA" >&2
+            exit 1
+          fi
+          git init -q server
+          git -C server fetch -q --depth 1 \
+            https://github.com/sebastienrousseau/crypto-service.git "$ref"
+          git -C server checkout -q --detach FETCH_HEAD
+          test "$(git -C server rev-parse HEAD)" = "$ref"
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           version: 11.9.0
