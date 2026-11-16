@@ -29,6 +29,7 @@ sync:
 
 versions:
 	./scripts/verify-release-versions
+	./scripts/verify-release-versions-test.sh
 
 # Regenerate src/crypto_service/_sync from the async source.
 unasync:
