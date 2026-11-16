@@ -81,6 +81,8 @@ jobs:
             echo "::error::$TAG is not an annotated tag"; exit 1; }
           git cat-file tag "$TAG" | grep -q -- '-----BEGIN SSH SIGNATURE-----\|-----BEGIN PGP SIGNATURE-----' || {
             echo "::error::$TAG is not signed"; exit 1; }
+          git config gpg.ssh.allowedSignersFile KEYS.asc
+          git verify-tag "$TAG"
           subject="$(git tag -l --format='%(contents:subject)' "$TAG")"
           test "$subject" = "crypto-service-sdk-python v$VERSION" || {
             echo "::error::tag message is '$subject', not 'crypto-service-sdk-python v$VERSION'"; exit 1; }
