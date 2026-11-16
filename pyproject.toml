@@ -1,0 +1,132 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "crypto-service-sdk-python"
+# The single source of truth for the version: the package reads it back
+# with importlib.metadata, and scripts/verify-release-versions checks
+# every restatement against this line.
+version = "0.0.40"
+description = "Typed async and sync Python client for the Crypto Service REST API (crypto-server v2)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0 OR MIT"
+license-files = ["LICENSE-APACHE", "LICENSE-MIT"]
+authors = [{ name = "Sebastien Rousseau" }]
+keywords = ["cryptography", "post-quantum", "ml-kem", "ml-dsa", "hpke", "sdk", "httpx"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Security :: Cryptography",
+  "Typing :: Typed",
+]
+dependencies = ["httpx[http2]>=0.28.1,<1"]
+
+[project.urls]
+Homepage = "https://crypto-service.co"
+Repository = "https://github.com/sebastienrousseau/crypto-service-sdk-python"
+Documentation = "https://github.com/sebastienrousseau/crypto-service-sdk-python#readme"
+Issues = "https://github.com/sebastienrousseau/crypto-service-sdk-python/issues"
+Changelog = "https://github.com/sebastienrousseau/crypto-service-sdk-python/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+dev = [
+  "ruff>=0.14",
+  "mypy>=1.18",
+  "pytest>=8.4",
+  "pytest-asyncio>=1.2",
+  "pytest-benchmark>=5.1",
+  "coverage[toml]>=7.10",
+  "hypothesis>=6.140",
+  "jsonschema>=4.25",
+  "radon>=6.0.1",
+  "complexipy>=4.0",
+  "pip-audit>=2.9",
+  "build>=1.3",
+  "twine>=6.2",
+]
+docs = [
+  "mkdocs>=1.6.1",
+  "mkdocs-material>=9.7",
+  "mkdocstrings[python]>=0.30",
+  # 11.0.0 and below carry GHSA-gm37-52c6-37mw and GHSA-9xwg-3r6f-jcx2.
+  "pymdown-extensions>=11.0.1",
+]
+sbom = ["cyclonedx-bom>=7.1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/crypto_service"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/crypto_service",
+  "tests",
+  "conformance",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "C90", "S", "SIM", "RUF", "PL", "N", "ASYNC", "PT"]
+ignore = [
+  "PLR0913", # keyword-only parameters mirror the API's request members
+  "PLR2004", # HTTP status codes read better as literals
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "PLR0915", "PLC0415"]
+"benchmarks/**" = ["S101", "S105", "S106"]
+"examples/**" = ["S105", "S106", "T201"]
+"fuzz/**" = ["S101"]
+"scripts/**" = ["S603", "S607"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+files = ["src", "tests", "examples", "benchmarks", "fuzz", "scripts"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["atheris", "radon.*", "complexipy", "jsonschema"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = ["-ra", "--strict-markers", "-p", "no:cacheprovider"]
+markers = ["conformance: needs a live crypto-server (CRYPTO_SERVICE_URL)"]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["crypto_service"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = true

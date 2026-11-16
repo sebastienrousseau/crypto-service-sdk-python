@@ -1,0 +1,202 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Releases crypto-service-sdk-python from a signed annotated tag
+# `v<version>` whose message is `crypto-service-sdk-python v<version>`:
+#
+#   1. build: checks the tag, every version restatement and the gate,
+#      builds the sdist and the wheel (uv build, twine check), writes the
+#      CycloneDX SBOM of the runtime dependencies and SHA256SUMS of every
+#      asset, and attests the build provenance of every file;
+#   2. release: creates the GitHub release with those files, titled
+#      `crypto-service-sdk-python <version>`, with the body from
+#      scripts/release-notes.sh (Highlights from docs/releases/<version>.md,
+#      What's Changed, Checksums, Full Changelog);
+#   3. publish: uploads the sdist and the wheel to PyPI by trusted
+#      publishing (OIDC, no token secret) from the `release`
+#      environment, with PEP 740 attestations.
+#
+# Dry run: run the workflow by hand (workflow_dispatch) with `dry-run`
+# left on, or from a branch. It builds and checks everything on the chosen
+# ref, prints the release body it would write, and skips the attestation,
+# the release and the publish.
+#
+# Safe to re-run: an existing release gets its assets replaced and its
+# notes rewritten, and files already on PyPI are skipped.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build and check only; no release, no publish
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # A dispatch is a dry run unless it is on a tag with dry-run turned off,
+  # which re-runs that tag's release.
+  DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry-run || github.ref_type != 'tag') }}
+
+jobs:
+  build:
+    name: Build, SBOM and checksums
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # build provenance (skipped in a dry run)
+      attestations: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.1"
+      - name: Version
+        id: version
+        run: |
+          version="$(sed -n 's/^version = "\([^"]*\)"$/\1/p' pyproject.toml | head -n 1)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: The tag is annotated, signed and names the release
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+          test "$(git cat-file -t "$TAG")" = tag || {
+            echo "::error::$TAG is not an annotated tag"; exit 1; }
+          git cat-file tag "$TAG" | grep -q -- '-----BEGIN SSH SIGNATURE-----\|-----BEGIN PGP SIGNATURE-----' || {
+            echo "::error::$TAG is not signed"; exit 1; }
+          git config gpg.ssh.allowedSignersFile KEYS.asc
+          git verify-tag "$TAG"
+          subject="$(git tag -l --format='%(contents:subject)' "$TAG")"
+          test "$subject" = "crypto-service-sdk-python v$VERSION" || {
+            echo "::error::tag message is '$subject', not 'crypto-service-sdk-python v$VERSION'"; exit 1; }
+      - name: Every version restatement agrees (with the tag on a release)
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if [ "$REF_TYPE" = tag ]; then
+            scripts/verify-release-versions --tag "$REF_NAME"
+          else
+            scripts/verify-release-versions
+          fi
+      - name: The gate (lint, types, complexity, 100% coverage)
+        run: make check
+      - name: Build the sdist and the wheel
+        run: make build
+      - name: SBOM of the runtime dependencies, checksums
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/runtime"
+          "$RUNNER_TEMP/runtime/bin/pip" install --quiet dist/*.whl
+          mkdir -p release
+          cp dist/* release/
+          uv run --frozen --only-group sbom cyclonedx-py environment \
+            --mc-type library --output-reproducible --output-format JSON \
+            --output-file "release/crypto-service-sdk-python-$VERSION.cdx.json" \
+            "$RUNNER_TEMP/runtime/bin/python"
+          jq -e '[.components[].name | ascii_downcase] | index("httpx")' \
+            "release/crypto-service-sdk-python-$VERSION.cdx.json" > /dev/null
+          (cd release && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
+      - name: Attest build provenance
+        if: env.DRY_RUN != 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: release/*
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release
+          path: release/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    name: GitHub release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the release and upload its assets
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+      - name: Release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          REF: ${{ github.ref_type == 'tag' && github.ref_name || 'HEAD' }}
+        run: |
+          scripts/release-notes.sh "$VERSION" release "$REF" > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+      - name: Dry run, the assets a release would carry
+        if: env.DRY_RUN == 'true'
+        run: ls -l release && cat release/SHA256SUMS
+      - name: Create the release, or replace its assets and notes
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          title="crypto-service-sdk-python $VERSION"
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" release/* --clobber -R "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" -R "$GITHUB_REPOSITORY" --title "$title" \
+              --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            gh release create "$TAG" release/* --verify-tag -R "$GITHUB_REPOSITORY" \
+              --title "$title" --notes-file "$RUNNER_TEMP/notes.md"
+          fi
+
+  publish:
+    name: Publish to PyPI
+    needs: [build, release]
+    if: github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry-run)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # PyPI trusted publisher: project crypto-service-sdk-python, this
+    # repository, workflow release.yml, environment release.
+    environment:
+      name: release
+      url: https://pypi.org/project/crypto-service-sdk-python/
+    permissions:
+      contents: read
+      id-token: write # trusted publishing and PEP 740 attestations
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - name: Publish (trusted publishing, no token)
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
+        with:
+          attestations: true
+          skip-existing: true

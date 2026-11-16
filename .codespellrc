@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# codespell (docs-lint workflow). Skipped: environments, build output,
+# licence texts, the lock file, fuzz inputs, recorded server responses
+# and the conformance kit vendored from crypto-server.
+[codespell]
+skip = ./.git,./.venv,./dist,./site,./LICENSES,./uv.lock,./fuzz/corpus,./fuzz/corpus-out,./fuzz/artifacts,./.github/demo.gif,./benchmarks/responses,./conformance,./.mypy_cache,./.ruff_cache
+check-hidden = true
