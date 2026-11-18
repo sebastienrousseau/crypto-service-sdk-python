@@ -74,10 +74,10 @@ run-time dependency is `httpx[http2]`. The package is typed (PEP 561,
 
 Each GitHub release carries the sdist and the wheel, a CycloneDX SBOM,
 `SHA256SUMS` and a build provenance attestation; PyPI receives the same
-sdist and wheel by trusted publishing, with PEP 740 attestations. The
-first release is 0.0.40, in lockstep with the Crypto Service suite; until
-it is on PyPI, install from a commit with
-`pip install git+https://github.com/sebastienrousseau/crypto-service-sdk-python@<sha>`.
+sdist and wheel by trusted publishing, with PEP 740 attestations.
+[Verifying a release](docs/REPRODUCING.md) checks the tag signature, the
+checksums and the attestations (`gh attestation verify`), and rebuilds
+the files bit for bit.
 
 ---
 
@@ -231,14 +231,17 @@ and will hold results with the hardware they ran on.
   the server's documented rules, never a guess.
 - **Typed results.** Each method returns the response's `data` member as
   a `TypedDict` from `crypto_service.types` (or a `str` for the routes
-  that answer a bare string), with no extra copies.
+  that answer a bare string), with no extra copies, once it is checked
+  against that type: a missing or mistyped member raises
+  `TransportError` naming the member. Members a newer server adds are
+  kept.
 - **Errors.** `CryptoServiceError` is the base. `ApiError` carries the
   status and the RFC 9457 `Problem` (`type`, `title`, `status`, `detail`,
   `instance`, `code`, `errors` as `ValidationIssue`s, and the raw
   document); a body that is not a problem becomes an `about:blank`
   problem. `TransportError` covers no response, timeouts (`timed_out`),
-  refused redirects and undecodable 2xx bodies
-  ([ADR 0003](docs/adr/0003-error-model.md)).
+  refused redirects and 2xx bodies that are not JSON or do not match
+  their type ([ADR 0003](docs/adr/0003-error-model.md)).
 - **One connection pool per client**: httpx with keep-alive and HTTP/2
   over TLS when the server offers it ([ADR 0002](docs/adr/0002-http-stack-httpx.md)).
 - **Opt-in retries** with exponential backoff and full jitter,
@@ -256,10 +259,10 @@ arguments:
 
 | Option | Type | Default | Meaning |
 | :--- | :--- | :--- | :--- |
-| `api_key` | `str \| None` | None | Sent as `x-api-key`; CR, LF and NUL are refused |
-| `token` | `str \| None` | None | A JWT, sent as `Authorization: Bearer` |
-| `timeout` | `float \| None` | 30.0 | Seconds per attempt; None for none |
-| `deadline` | `float \| None` | None | Seconds for the whole call, retries and waits included |
+| `api_key` | `str \| None` | None | Sent as `x-api-key`; visible ASCII only (inner spaces allowed) |
+| `token` | `str \| None` | None | A JWT or other token68 string, sent as `Authorization: Bearer` |
+| `timeout` | `float \| None` | 30.0 | Seconds per attempt; None for none (see below for `Client`) |
+| `deadline` | `float \| None` | None | Seconds for the whole call, retries and waits included (see below for `Client`) |
 | `retry` | `RetryOptions \| None` | no retries | `max_retries` (0), `initial_delay` (0.2 s), `max_delay` (2.0 s) |
 | `traceparent` | `str \| bool \| None` | None | A W3C `traceparent` to send, or True for a new one per call |
 | `transport` | httpx transport | httpx's | An `httpx.AsyncBaseTransport` (`BaseTransport` for `Client`), for tests |
@@ -287,8 +290,19 @@ Operations that create or delete state (`keys_delete`,
 `generate_key_pair`, every `*keygen*` method, `kms_create_key`,
 `opaque_register_*`) are retried only after 429 or 503, which the server
 sends before doing any work. A `Retry-After` longer than `max_delay` ends
-the retries. The library reads no environment variables; the examples
-and tests read `CRYPTO_SERVICE_URL` and `CRYPTO_SERVICE_API_KEY`.
+the retries.
+
+In `AsyncClient`, `timeout` and `deadline` are wall-clock limits. In the
+blocking `Client`, httpx applies `timeout` to each connect, read, write
+and pool wait, and the deadline is checked before each attempt and each
+wait: a server that sends a byte at a time can hold one attempt longer
+than either. Use `AsyncClient` when a hard bound matters.
+
+The SDK reads no environment variables itself; the examples and tests
+read `CRYPTO_SERVICE_URL` and `CRYPTO_SERVICE_API_KEY`. httpx, as
+configured, honours `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and
+`NO_PROXY`, and `SSL_CERT_FILE` or `SSL_CERT_DIR` replace the CA roots
+it trusts ([SECURITY.md](SECURITY.md#threat-model)).
 
 ---
 
@@ -358,13 +372,18 @@ The SDK sends the data and keys you pass it to the server you configure
 and nothing else. It never logs. Exception messages and `repr` hold the
 status, the problem type and its title, never a request or response
 body, the problem's `detail` or a credential; a client's `repr` shows
-credentials as `'***'`. Redirects are refused, so credentials cannot
-reach another origin, and TLS verification is always on, with no option
-to turn it off. Credentials are checked for CR, LF and NUL so they cannot
-inject headers. The problem parser and the response decoder are fuzzed
+credentials as `'***'`. Redirects are refused and `request()` refuses a
+path with a scheme or a host, so credentials cannot reach another
+origin, and TLS verification is always on, with no option to turn it
+off. Credentials, the traceparent and raw request headers are checked
+against allowlists, so they cannot inject headers, and success responses
+are checked against their types. The problem parser and the response decoder are fuzzed
 with atheris on every pull request, and their seed corpus replays in the
 unit tests. Releases carry SHA256SUMS, a CycloneDX SBOM and a build
-provenance attestation.
+provenance attestation. The [assurance case](docs/ASSURANCE.md) argues
+why these measures are enough, and the
+[2026-11 security review](docs/security-review-2026-11.md) records what
+was checked.
 
 Report vulnerabilities according to [`SECURITY.md`](SECURITY.md).
 
@@ -376,6 +395,8 @@ Report vulnerabilities according to [`SECURITY.md`](SECURITY.md).
 [Family map](#the-crypto-service-ecosystem)
 
 Also: [Architecture](docs/ARCHITECTURE.md) ·
+[Assurance case](docs/ASSURANCE.md) ·
+[Verifying a release](docs/REPRODUCING.md) ·
 [Decision records](docs/adr/README.md) · [Roadmap](docs/ROADMAP.md) ·
 [Benchmarks](docs/BENCHMARKS.md) · [Comparison](docs/COMPARISON.md) ·
 [Policies](docs/POLICIES.md) · [Changelog](CHANGELOG.md) ·

@@ -58,6 +58,8 @@ nav:
   - Comparison: COMPARISON.md
   - Benchmarks: BENCHMARKS.md
   - Policies: POLICIES.md
+  - Assurance case: ASSURANCE.md
+  - Security review 2026-11: security-review-2026-11.md
   - Verifying a release: REPRODUCING.md
   - Roadmap: ROADMAP.md
   - Decision records:

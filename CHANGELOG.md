@@ -9,6 +9,19 @@ advance in `0.0.1` steps in lockstep with the Crypto Service suite.
 
 ## [0.0.41] - Unreleased
 
+### Added
+
+- `docs/ASSURANCE.md`, the assurance case: threat model, trust
+  boundaries, secure design principles and CWE/OWASP mapping, each with
+  the code and tests behind it.
+- `docs/security-review-2026-11.md`, the first recorded security review,
+  with its findings and their disposition.
+- `docs/REPRODUCING.md`: verify a release (tag signature, `SHA256SUMS`,
+  `gh attestation verify`, PyPI provenance) and rebuild it bit for bit.
+- `scripts/sbom.sh`, a reproducible release SBOM (from `uv.lock`, no
+  pip, no local paths); CI checks two runs give the same bytes.
+- The README demo, `.github/demo.gif`, rendered with `make demo`.
+
 ### Changed
 
 - Typed methods check each success response against its type in
@@ -27,6 +40,15 @@ advance in `0.0.1` steps in lockstep with the Crypto Service suite.
 - `request()` refuses a path with a scheme or a host
   (`https://other.test/x`, `//other.test/x`): an absolute URL was sent
   as given, with the client's credentials, to that other origin.
+- Dependabot's uv updates: the lock now covers Python 3.11.5 and newer
+  (`tool.uv.environments`), so `uv lock --upgrade-package` resolves; it
+  failed on 2026-11-16 over pymdown-extensions 13.1. The build backend
+  is pinned (`tool.uv.build-constraint-dependencies`) so releases
+  rebuild bit for bit.
+- Documentation: the blocking client's `timeout` and `deadline` bound
+  each socket operation, not the whole attempt; httpx honours the proxy
+  and `SSL_CERT_FILE`/`SSL_CERT_DIR` variables; the README no longer says
+  the package is not yet on PyPI.
 
 ## [0.0.40] - 2026-11-16
 
