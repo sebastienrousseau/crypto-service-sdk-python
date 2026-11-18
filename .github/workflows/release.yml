@@ -6,8 +6,9 @@
 #
 #   1. build: checks the tag, every version restatement and the gate,
 #      builds the sdist and the wheel (uv build, twine check), writes the
-#      CycloneDX SBOM of the runtime dependencies and SHA256SUMS of every
-#      asset, and attests the build provenance of every file;
+#      CycloneDX SBOM of the runtime dependencies (scripts/sbom.sh) and
+#      SHA256SUMS of every asset, and attests the build provenance of
+#      every file. docs/REPRODUCING.md rebuilds them bit for bit;
 #   2. release: creates the GitHub release with those files, titled
 #      `crypto-service-sdk-python <version>`, with the body from
 #      scripts/release-notes.sh (Highlights from docs/releases/<version>.md,
@@ -106,16 +107,9 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          python3 -m venv "$RUNNER_TEMP/runtime"
-          "$RUNNER_TEMP/runtime/bin/pip" install --quiet dist/*.whl
           mkdir -p release
           cp dist/* release/
-          uv run --frozen --only-group sbom cyclonedx-py environment \
-            --mc-type library --output-reproducible --output-format JSON \
-            --output-file "release/crypto-service-sdk-python-$VERSION.cdx.json" \
-            "$RUNNER_TEMP/runtime/bin/python"
-          jq -e '[.components[].name | ascii_downcase] | index("httpx")' \
-            "release/crypto-service-sdk-python-$VERSION.cdx.json" > /dev/null
+          scripts/sbom.sh "release/crypto-service-sdk-python-$VERSION.cdx.json"
           (cd release && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
       - name: Attest build provenance
         if: env.DRY_RUN != 'true'

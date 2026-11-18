@@ -9,6 +9,9 @@ supported-markers = [
     "python_full_version >= '3.11.5'",
 ]
 
+[manifest]
+build-constraints = [{ name = "hatchling", specifier = "==1.33.0" }]
+
 [[package]]
 name = "anyio"
 version = "4.16.0"

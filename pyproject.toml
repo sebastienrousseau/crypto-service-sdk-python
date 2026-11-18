@@ -73,6 +73,9 @@ sbom = ["cyclonedx-bom>=7.1"]
 # 2026-11-16). The package itself still supports 3.11 (requires-python).
 [tool.uv]
 environments = ["python_full_version >= '3.11.5'"]
+# The build backend `uv build` uses, pinned so a release rebuilds bit for
+# bit later (docs/REPRODUCING.md); the wheel's WHEEL file names it.
+build-constraint-dependencies = ["hatchling==1.33.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crypto_service"]

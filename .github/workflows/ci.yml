@@ -99,6 +99,11 @@ jobs:
           "$RUNNER_TEMP/wheel/bin/pip" install dist/*.whl
           cd "$RUNNER_TEMP"
           "$RUNNER_TEMP/wheel/bin/python" -c 'import crypto_service; print(crypto_service.USER_AGENT)'
+      - name: The release SBOM is reproducible (two runs, same bytes)
+        run: |
+          scripts/sbom.sh "$RUNNER_TEMP/one.cdx.json"
+          scripts/sbom.sh "$RUNNER_TEMP/two.cdx.json"
+          cmp "$RUNNER_TEMP/one.cdx.json" "$RUNNER_TEMP/two.cdx.json"
 
   api:
     name: API compatibility with the last tag (griffe)
