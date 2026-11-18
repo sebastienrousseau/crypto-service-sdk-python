@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Transport-agnostic request logic shared by the async and sync clients.
 
 Nothing here performs I/O: it validates options, builds headers, encodes
@@ -23,6 +24,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from ._problem import parse_problem
+from ._shape import check_shape
 from ._version import USER_AGENT
 from .errors import ApiError, TransportError
 
@@ -35,7 +37,21 @@ DEFAULT_TIMEOUT = 30.0
 #: TypeScript SDK's request.ts.
 _STATEFUL_ROUTE = re.compile(r"/(keygen|keys/generate|keys/delete|kms/create-key|opaque/register/)")
 _TRANSIENT = frozenset({429, 503, 504})
-_FORBIDDEN_IN_HEADER = ("\r", "\n", "\0")
+# Allowlists for what reaches a request line or a header (RFC 9110,
+# RFC 7235, W3C Trace Context), ASCII only: anything else is refused
+# before a request is built, and the message never repeats the value.
+#: A field value: visible ASCII, inner spaces and tabs allowed.
+_FIELD_VALUE = re.compile(r"[\x21-\x7e](?:[\x21-\x7e \t]*[\x21-\x7e])?")
+#: The credentials of the Bearer scheme (token68).
+_TOKEN68 = re.compile(r"[A-Za-z0-9._~+/-]+=*")
+#: A method or a field name (an RFC 9110 token).
+_TOKEN = re.compile(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+")
+#: A traceparent: version (not ff), non-zero trace and parent IDs, flags.
+_TRACEPARENT = re.compile(
+    r"(?!ff)[0-9a-f]{2}-(?!0{32})[0-9a-f]{32}-(?!0{16})[0-9a-f]{16}-[0-9a-f]{2}"
+)
+#: A request target: visible ASCII, no spaces or control characters.
+_TARGET = re.compile(r"[\x21-\x7e]+")
 _REDACTED = "'***'"
 _JITTER = secrets.SystemRandom().random
 
@@ -63,9 +79,27 @@ class RetryOptions:
             raise ValueError("retry options must not be negative")
 
 
-def _check_header_value(name: str, value: str | None) -> None:
-    if value is not None and (not value or any(c in value for c in _FORBIDDEN_IN_HEADER)):
-        raise ValueError(f"{name} must be non-empty and contain no CR, LF or NUL")
+def _check(name: str, value: str | None, pattern: re.Pattern[str], rule: str) -> None:
+    if value is not None and pattern.fullmatch(value) is None:
+        raise ValueError(f"{name} must be {rule}")
+
+
+def check_request_target(method: str, path: str) -> None:
+    """Refuse a raw request whose method or path is not a plain origin-relative target.
+
+    A path with a scheme or a host (``https://other.test/``,
+    ``//other.test/``) would send the credentials to another origin.
+    """
+    _check("method", method, _TOKEN, "an HTTP token such as GET or POST")
+    parts = urlsplit(path) if _TARGET.fullmatch(path) else None
+    if parts is None or parts.scheme or parts.netloc:
+        raise ValueError("path must be a path on base_url, without a scheme, host or spaces")
+
+
+def _check_extra_headers(extra: Mapping[str, str]) -> None:
+    for name, value in extra.items():
+        _check("a header name", name, _TOKEN, "an HTTP token")
+        _check("a header value", value, _FIELD_VALUE, "visible ASCII")
 
 
 def _check_base_url(base_url: str) -> str:
@@ -104,10 +138,10 @@ class Config:
         traceparent: str | bool | None,
     ) -> Config:
         """Validate the options and build the configuration."""
-        _check_header_value("api_key", api_key)
-        _check_header_value("token", token)
+        _check("api_key", api_key, _FIELD_VALUE, "visible ASCII (inner spaces allowed)")
+        _check("token", token, _TOKEN68, "a token68 string, such as a JWT")
         if isinstance(traceparent, str):
-            _check_header_value("traceparent", traceparent)
+            _check("traceparent", traceparent, _TRACEPARENT, "a W3C traceparent")
         if (timeout is not None and timeout <= 0) or (deadline is not None and deadline <= 0):
             raise ValueError("timeout and deadline must be positive seconds, or None")
         return cls(
@@ -142,6 +176,7 @@ class Config:
         elif isinstance(self.traceparent, str):
             headers["traceparent"] = self.traceparent
         if extra:
+            _check_extra_headers(extra)
             headers.update(extra)
         return headers
 
@@ -255,26 +290,32 @@ def encode_body(body: Mapping[str, Any]) -> bytes:
     return json.dumps(body, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode()
 
 
-def decode_success(content: bytes, *, wrapped: bool) -> Any:
-    """The value of a 2xx JSON body: its ``data`` member when ``wrapped``."""
+def decode_success(content: bytes, *, wrapped: bool, expected: Any = Any) -> Any:
+    """The value of a 2xx JSON body: its ``data`` member when ``wrapped``.
+
+    The value is checked against ``expected``, a :mod:`crypto_service.types`
+    type (``Any`` checks nothing), before it is returned.
+    """
     try:
         value = json.loads(content)
     except (ValueError, RecursionError) as exc:
         raise TransportError("The server's response is not valid JSON") from exc
     if not wrapped:
-        return value
+        return check_shape(value, expected, "body")
     if not isinstance(value, dict) or "data" not in value:
         raise TransportError("The server's response has no data member")
-    return value["data"]
+    return check_shape(value["data"], expected)
 
 
-def decode_response(status: int, reason: str, content: bytes, *, wrapped: bool) -> Any:
+def decode_response(
+    status: int, reason: str, content: bytes, *, wrapped: bool, expected: Any = Any
+) -> Any:
     """Decode a final response, or raise the error it stands for."""
     if 300 <= status < 400:
         raise TransportError("The server answered with a redirect, which the client refuses")
     if status >= 400:
         raise ApiError(parse_problem(status, reason, content))
-    return decode_success(content, wrapped=wrapped)
+    return decode_success(content, wrapped=wrapped, expected=expected)
 
 
 def compact(members: Mapping[str, Any]) -> dict[str, Any]:

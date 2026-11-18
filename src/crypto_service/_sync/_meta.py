@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 # Generated from src/crypto_service/_async/_meta.py by scripts/unasync.py.
 # Do not edit: change the async source and run `make unasync`.
 """Service description, probes, the algorithm catalogue and compliance documents."""
@@ -24,15 +25,21 @@ class MetaOps(Base):
 
     def root(self) -> RootInfo:
         """``GET /``: the service description (not wrapped in ``data``)."""
-        return cast(RootInfo, self._call("GET", "/", wrapped=False))
+        return cast(RootInfo, self._call("GET", "/", wrapped=False, expect=RootInfo))
 
     def health(self) -> HealthResult:
         """``GET /health``, a public probe: no credentials are sent."""
-        return cast(HealthResult, self._call("GET", "/health", wrapped=False, auth=False))
+        return cast(
+            HealthResult,
+            self._call("GET", "/health", wrapped=False, auth=False, expect=HealthResult),
+        )
 
     def live(self) -> LiveResult:
         """``GET /live``, a public probe: no credentials are sent."""
-        return cast(LiveResult, self._call("GET", "/live", wrapped=False, auth=False))
+        return cast(
+            LiveResult,
+            self._call("GET", "/live", wrapped=False, auth=False, expect=LiveResult),
+        )
 
     def ready(self) -> ReadyResult:
         """``GET /ready``, a public probe: no credentials are sent.
@@ -40,16 +47,21 @@ class MetaOps(Base):
         A server that is not ready answers 503, raised as
         :class:`~crypto_service.ApiError` (and retried when retries are on).
         """
-        return cast(ReadyResult, self._call("GET", "/ready", wrapped=False, auth=False))
+        return cast(
+            ReadyResult,
+            self._call("GET", "/ready", wrapped=False, auth=False, expect=ReadyResult),
+        )
 
     def algorithms(self) -> AlgorithmCatalogue:
         """``GET /v2/algorithms``: every algorithm name by category."""
-        return cast(AlgorithmCatalogue, self._call("GET", "/v2/algorithms"))
+        return cast(
+            AlgorithmCatalogue, self._call("GET", "/v2/algorithms", expect=AlgorithmCatalogue)
+        )
 
     def get_dora_compliance(self) -> DoraCompliance:
         """``GET /v2/compliance/dora``: the DORA Article 9 and 13 self-assessment."""
-        return cast(DoraCompliance, self._call("GET", "/v2/compliance/dora"))
+        return cast(DoraCompliance, self._call("GET", "/v2/compliance/dora", expect=DoraCompliance))
 
     def get_cbom(self) -> Cbom:
         """``GET /v2/compliance/cbom``: the CycloneDX 1.6 CBOM, not wrapped in ``data``."""
-        return cast(Cbom, self._call("GET", "/v2/compliance/cbom", wrapped=False))
+        return cast(Cbom, self._call("GET", "/v2/compliance/cbom", wrapped=False, expect=Cbom))

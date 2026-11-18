@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # `make check` is the gate: version restatements, the generated blocking
 # client, ruff (lint and format), mypy --strict, the complexity ceilings,

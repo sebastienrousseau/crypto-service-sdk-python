@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Benchmarks, with the scenario names every Crypto Service SDK uses.
 
 ``encode_request``, ``decode_response`` and ``decode_problem`` measure

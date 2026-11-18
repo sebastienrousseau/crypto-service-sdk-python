@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 cff-version: 1.2.0
 message: "If you use crypto-service-sdk-python in research or production write-ups, please cite it as below."
 type: software
@@ -11,7 +12,7 @@ abstract: >-
 authors:
   - family-names: Rousseau
     given-names: Sebastien
-version: "0.0.40"
+version: "0.0.41"
 # Dual-licensed, at the user's option (LICENSE-APACHE, LICENSE-MIT).
 license:
   - Apache-2.0

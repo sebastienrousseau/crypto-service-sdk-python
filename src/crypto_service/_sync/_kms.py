@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 # Generated from src/crypto_service/_async/_kms.py by scripts/unasync.py.
 # Do not edit: change the async source and run `make unasync`.
 """Key management service routes (local provider by default)."""
@@ -40,7 +41,7 @@ class KmsOps(Base):
         body = compact(
             {"provider": provider, "algorithm": algorithm, "usage": usage, "metadata": metadata}
         )
-        return cast(KmsKey, self._call("POST", "/v2/kms/create-key", body))
+        return cast(KmsKey, self._call("POST", "/v2/kms/create-key", body, expect=KmsKey))
 
     def kms_encrypt(
         self,
@@ -69,7 +70,10 @@ class KmsOps(Base):
                 "context": context,
             }
         )
-        return cast(KmsEncryptResult, self._call("POST", "/v2/kms/encrypt", body))
+        return cast(
+            KmsEncryptResult,
+            self._call("POST", "/v2/kms/encrypt", body, expect=KmsEncryptResult),
+        )
 
     def kms_decrypt(
         self,
@@ -83,7 +87,10 @@ class KmsOps(Base):
         body = compact(
             {"keyId": key_id, "ciphertext": ciphertext, "provider": provider, "context": context}
         )
-        return cast(KmsDecryptResult, self._call("POST", "/v2/kms/decrypt", body))
+        return cast(
+            KmsDecryptResult,
+            self._call("POST", "/v2/kms/decrypt", body, expect=KmsDecryptResult),
+        )
 
     def kms_wrap(
         self,
@@ -102,7 +109,7 @@ class KmsOps(Base):
                 "context": context,
             }
         )
-        return cast(KmsWrapResult, self._call("POST", "/v2/kms/wrap", body))
+        return cast(KmsWrapResult, self._call("POST", "/v2/kms/wrap", body, expect=KmsWrapResult))
 
     def kms_unwrap(
         self,
@@ -116,7 +123,10 @@ class KmsOps(Base):
         body = compact(
             {"keyId": key_id, "wrappedKey": wrapped_key, "provider": provider, "context": context}
         )
-        return cast(KmsUnwrapResult, self._call("POST", "/v2/kms/unwrap", body))
+        return cast(
+            KmsUnwrapResult,
+            self._call("POST", "/v2/kms/unwrap", body, expect=KmsUnwrapResult),
+        )
 
     def kms_generate_data_key(
         self, *, key_id: str, key_spec: str | None = None, provider: str | None = None
@@ -124,4 +134,4 @@ class KmsOps(Base):
         """``POST /v2/kms/generate-data-key``: a data key, plain (hex) and wrapped."""
         body = compact({"keyId": key_id, "keySpec": key_spec, "provider": provider})
         path = "/v2/kms/generate-data-key"
-        return cast(KmsDataKey, self._call("POST", path, body))
+        return cast(KmsDataKey, self._call("POST", path, body, expect=KmsDataKey))

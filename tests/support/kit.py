@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Loading and matching the vendored conformance kit (conformance/README.md).
 
 Templates match exactly, except an object whose only member is

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Tests scripts/verify-release-versions on a scratch copy of the files it
 # reads: an undated `## [<version>] - Unreleased` CHANGELOG heading

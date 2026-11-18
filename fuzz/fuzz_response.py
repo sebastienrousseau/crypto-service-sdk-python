@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """atheris entry point: the success-response decoder and status mapping.
 
 Run: python fuzz/fuzz_response.py -max_total_time=60 fuzz/corpus/response

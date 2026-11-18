@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Conversions between ``bytes`` and the encodings the API names.
 
 The API carries binary values as lowercase hex (keys, signatures,

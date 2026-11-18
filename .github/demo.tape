@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Rendered by `make demo` (vhs, https://github.com/charmbracelet/vhs) from
 # the repository root, against a crypto-server already listening on

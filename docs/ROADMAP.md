@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+<!-- SPDX-FileCopyrightText: 2026 Sebastien Rousseau -->
 
 # Roadmap
 
@@ -9,8 +10,6 @@ rule ([ADR 0001](adr/0001-thin-client-over-the-server.md)).
 
 - Publish benchmark results in [BENCHMARKS.md](BENCHMARKS.md) with the
   hardware they ran on.
-- Render the README demo (`make demo`) once VHS is part of the release
-  checklist.
 - Track each crypto-server release: re-vendor the kit, move
   `ci/server.ref` to the release tag.
 

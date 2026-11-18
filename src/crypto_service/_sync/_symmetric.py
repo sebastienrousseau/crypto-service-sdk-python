@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 # Generated from src/crypto_service/_async/_symmetric.py by scripts/unasync.py.
 # Do not edit: change the async source and run `make unasync`.
 """Symmetric encryption: AEAD, secretbox, password envelopes and AES key wrap."""
@@ -30,32 +31,39 @@ class SymmetricOps(Base):
         back as base64.
         """
         body = {"key": to_hex(key), "plaintext": plaintext}
-        return cast(AeadResult, self._call("POST", "/v2/encrypt", body))
+        return cast(AeadResult, self._call("POST", "/v2/encrypt", body, expect=AeadResult))
 
     def decrypt(self, *, key: Hex, ciphertext: Base64) -> PlaintextResult:
         """``POST /v2/decrypt``: the UTF-8 plaintext of an ``encrypt`` ciphertext."""
         body = {"key": to_hex(key), "ciphertext": to_base64(ciphertext)}
-        return cast(PlaintextResult, self._call("POST", "/v2/decrypt", body))
+        return cast(
+            PlaintextResult, self._call("POST", "/v2/decrypt", body, expect=PlaintextResult)
+        )
 
     def secretbox_seal(self, *, key: Hex, plaintext: str, aad: str | None = None) -> SealedResult:
         """``POST /v2/secretbox/seal``: authenticated encryption with optional AAD."""
         body = compact({"key": to_hex(key), "plaintext": plaintext, "aad": aad})
-        return cast(SealedResult, self._call("POST", "/v2/secretbox/seal", body))
+        return cast(
+            SealedResult, self._call("POST", "/v2/secretbox/seal", body, expect=SealedResult)
+        )
 
     def secretbox_open(self, *, key: Hex, ciphertext: Base64, aad: str | None = None) -> str:
         """``POST /v2/secretbox/open``: the UTF-8 plaintext (``data`` is a bare string)."""
         body = compact({"key": to_hex(key), "ciphertext": to_base64(ciphertext), "aad": aad})
-        return cast(str, self._call("POST", "/v2/secretbox/open", body))
+        return cast(str, self._call("POST", "/v2/secretbox/open", body, expect=str))
 
     def password_encrypt(self, *, password: str, plaintext: str) -> PasswordEncryptResult:
         """``POST /v2/password/encrypt``: Argon2id + XChaCha20-Poly1305 envelope."""
         body = {"password": password, "plaintext": plaintext}
-        return cast(PasswordEncryptResult, self._call("POST", "/v2/password/encrypt", body))
+        return cast(
+            PasswordEncryptResult,
+            self._call("POST", "/v2/password/encrypt", body, expect=PasswordEncryptResult),
+        )
 
     def password_decrypt(self, *, password: str, ciphertext: Base64) -> str:
         """``POST /v2/password/decrypt``: the plaintext of a ``password_encrypt`` envelope."""
         body = {"password": password, "ciphertext": to_base64(ciphertext)}
-        return cast(str, self._call("POST", "/v2/password/decrypt", body))
+        return cast(str, self._call("POST", "/v2/password/decrypt", body, expect=str))
 
     def key_wrap(
         self, *, kek: Hex, key_to_wrap: Hex, algorithm: KeyWrapAlgorithm | None = None
@@ -64,7 +72,7 @@ class SymmetricOps(Base):
         body = compact(
             {"kek": to_hex(kek), "keyToWrap": to_hex(key_to_wrap), "algorithm": algorithm}
         )
-        return cast(KeyWrapResult, self._call("POST", "/v2/keys/wrap", body))
+        return cast(KeyWrapResult, self._call("POST", "/v2/keys/wrap", body, expect=KeyWrapResult))
 
     def key_unwrap(
         self, *, kek: Hex, wrapped_key: Base64, algorithm: KeyWrapAlgorithm | None = None
@@ -73,4 +81,4 @@ class SymmetricOps(Base):
         body = compact(
             {"kek": to_hex(kek), "wrappedKey": to_base64(wrapped_key), "algorithm": algorithm}
         )
-        return cast(str, self._call("POST", "/v2/keys/unwrap", body))
+        return cast(str, self._call("POST", "/v2/keys/unwrap", body, expect=str))

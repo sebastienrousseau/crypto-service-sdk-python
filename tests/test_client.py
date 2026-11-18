@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Retries, timeouts, deadlines, errors and credentials, on both clients."""
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from crypto_service import ApiError, RetryOptions, TransportError, _core
 
 from .conftest import BASE_URL, call
 
+DIGEST = {"algorithm": "sha256", "digest": "00", "length": 1}
 PROBLEM = {
     "type": "urn:crypto-service:problem:key-not-found",
     "title": "Key not found",
@@ -25,7 +27,7 @@ PROBLEM = {
 
 
 def ok() -> httpx.Response:
-    return httpx.Response(200, json={"data": {"digest": "00"}})
+    return httpx.Response(200, json={"data": DIGEST})
 
 
 def scripted(*steps: httpx.Response | Exception) -> tuple[Callable[..., Any], list[httpx.Request]]:
@@ -82,7 +84,7 @@ async def test_transient_statuses_are_retried(
 ) -> None:
     handler, seen = scripted(httpx.Response(status), ok())
     client = make_client(handler, retry=RetryOptions(max_retries=2))
-    assert await hash_abc(client) == {"digest": "00"}
+    assert await hash_abc(client) == DIGEST
     assert len(seen) == 2
     assert len(sleeps) == 1
     assert 0 <= sleeps[0] <= 0.2
@@ -132,9 +134,11 @@ async def test_stateful_routes_are_not_retried_after_504(make_client: Callable[.
 
 
 async def test_stateful_routes_are_retried_after_503(make_client: Callable[..., Any]) -> None:
-    handler, seen = scripted(httpx.Response(503), httpx.Response(200, json={"data": {"k": 1}}))
+    key = {"keyId": "local-1", "provider": "local", "algorithm": "aes-256-gcm",
+           "usage": "encrypt", "enabled": True, "createdAt": "2026-11-18T00:00:00Z"}  # fmt: skip
+    handler, seen = scripted(httpx.Response(503), httpx.Response(200, json={"data": key}))
     client = make_client(handler, retry=RetryOptions(max_retries=1))
-    assert await call(client.kms_create_key()) == {"k": 1}
+    assert await call(client.kms_create_key()) == key
     assert len(seen) == 2
 
 
@@ -143,7 +147,7 @@ async def test_connection_errors_are_retried_when_idempotent(
 ) -> None:
     handler, seen = scripted(httpx.ConnectError("refused"), ok())
     client = make_client(handler, retry=RetryOptions(max_retries=1))
-    assert await hash_abc(client) == {"digest": "00"}
+    assert await hash_abc(client) == DIGEST
     assert len(seen) == 2
 
 
@@ -251,6 +255,15 @@ async def test_raw_request_returns_any_status(make_client: Callable[..., Any]) -
     assert seen[1].content == b"<a/>"
     assert seen[1].headers["content-type"] == "application/xml"
     assert seen[1].headers["x-api-key"]
+
+
+async def test_raw_request_stays_on_the_base_url(make_client: Callable[..., Any]) -> None:
+    handler, seen = scripted()
+    client = make_client(handler)
+    for path in ("https://elsewhere.test/v2/hash", "//elsewhere.test/v2/hash"):
+        with pytest.raises(ValueError, match="path"):
+            await call(client.request("GET", path))
+    assert seen == []
 
 
 async def test_raw_request_with_json_body(make_client: Callable[..., Any]) -> None:

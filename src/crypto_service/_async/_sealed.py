@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Public-key encryption: sealed boxes, HPKE, hybrid STREAM and multi-recipient."""
 
 from __future__ import annotations
@@ -37,12 +38,14 @@ class AsyncSealedOps(AsyncBase):
     async def sealedbox_seal(self, *, recipient_public_key: Hex, plaintext: str) -> SealedResult:
         """``POST /v2/sealedbox/seal``: anonymous encryption to an X25519 public key."""
         body = {"recipientPublicKey": to_hex(recipient_public_key), "plaintext": plaintext}
-        return cast(SealedResult, await self._call("POST", "/v2/sealedbox/seal", body))
+        return cast(
+            SealedResult, await self._call("POST", "/v2/sealedbox/seal", body, expect=SealedResult)
+        )
 
     async def sealedbox_open(self, *, key_id: str, sealed: Base64) -> str:
         """``POST /v2/sealedbox/open``: the plaintext (``data`` is a bare string)."""
         body = {"keyId": key_id, "sealed": to_base64(sealed)}
-        return cast(str, await self._call("POST", "/v2/sealedbox/open", body))
+        return cast(str, await self._call("POST", "/v2/sealedbox/open", body, expect=str))
 
     async def sealedbox_seal_pq(
         self, *, x25519_public_key: Hex, ml_kem_public_key: Hex, plaintext: str
@@ -53,12 +56,15 @@ class AsyncSealedOps(AsyncBase):
             "mlKemPublicKey": to_hex(ml_kem_public_key),
             "plaintext": plaintext,
         }
-        return cast(SealedResult, await self._call("POST", "/v2/sealedbox/seal-pq", body))
+        return cast(
+            SealedResult,
+            await self._call("POST", "/v2/sealedbox/seal-pq", body, expect=SealedResult),
+        )
 
     async def sealedbox_open_pq(self, *, key_id: str, sealed: Base64) -> str:
         """``POST /v2/sealedbox/open-pq``: the plaintext (``data`` is a bare string)."""
         body = {"keyId": key_id, "sealed": to_base64(sealed)}
-        return cast(str, await self._call("POST", "/v2/sealedbox/open-pq", body))
+        return cast(str, await self._call("POST", "/v2/sealedbox/open-pq", body, expect=str))
 
     async def stream_pq_encrypt(
         self,
@@ -77,7 +83,10 @@ class AsyncSealedOps(AsyncBase):
                 "chunkSize": chunk_size,
             }
         )
-        return cast(StreamEncryptResult, await self._call("POST", "/v2/stream/pq-encrypt", body))
+        return cast(
+            StreamEncryptResult,
+            await self._call("POST", "/v2/stream/pq-encrypt", body, expect=StreamEncryptResult),
+        )
 
     async def stream_pq_decrypt(
         self, *, key_id: str, ciphertext: Base64, chunk_size: int | None = None
@@ -86,7 +95,10 @@ class AsyncSealedOps(AsyncBase):
         body = compact(
             {"keyId": key_id, "ciphertext": to_base64(ciphertext), "chunkSize": chunk_size}
         )
-        return cast(PlaintextResult, await self._call("POST", "/v2/stream/pq-decrypt", body))
+        return cast(
+            PlaintextResult,
+            await self._call("POST", "/v2/stream/pq-decrypt", body, expect=PlaintextResult),
+        )
 
     async def stream_multi_pq_encrypt(
         self,
@@ -100,7 +112,10 @@ class AsyncSealedOps(AsyncBase):
             {"recipients": list(recipients), "plaintext": plaintext, "chunkSize": chunk_size}
         )
         path = "/v2/stream/multi-pq-encrypt"
-        return cast(MultiStreamEncryptResult, await self._call("POST", path, body))
+        return cast(
+            MultiStreamEncryptResult,
+            await self._call("POST", path, body, expect=MultiStreamEncryptResult),
+        )
 
     async def stream_multi_pq_decrypt(
         self,
@@ -120,7 +135,10 @@ class AsyncSealedOps(AsyncBase):
             }
         )
         path = "/v2/stream/multi-pq-decrypt"
-        return cast(MultiStreamDecryptResult, await self._call("POST", path, body))
+        return cast(
+            MultiStreamDecryptResult,
+            await self._call("POST", path, body, expect=MultiStreamDecryptResult),
+        )
 
     async def multi_recipient_encrypt(
         self, *, plaintext: str, recipients: Sequence[MultiRecipient]
@@ -128,11 +146,16 @@ class AsyncSealedOps(AsyncBase):
         """``POST /v2/multi-recipient/encrypt``: one ciphertext, classical and PQ recipients."""
         body = {"plaintext": plaintext, "recipients": list(recipients)}
         path = "/v2/multi-recipient/encrypt"
-        return cast(MultiRecipientResult, await self._call("POST", path, body))
+        return cast(
+            MultiRecipientResult, await self._call("POST", path, body, expect=MultiRecipientResult)
+        )
 
     async def hpke_generate_key_pair(self, *, kem: HpkeKem | None = None) -> KeyPair:
         """``POST /v2/hpke/keygen``: a server-held HPKE key (X-Wing by default)."""
-        return cast(KeyPair, await self._call("POST", "/v2/hpke/keygen", compact({"kem": kem})))
+        return cast(
+            KeyPair,
+            await self._call("POST", "/v2/hpke/keygen", compact({"kem": kem}), expect=KeyPair),
+        )
 
     async def hpke_seal(
         self,
@@ -165,7 +188,9 @@ class AsyncSealedOps(AsyncBase):
                 "pskId": _hpke_text(psk_id),
             }
         )
-        return cast(HpkeSealResult, await self._call("POST", "/v2/hpke/seal", body))
+        return cast(
+            HpkeSealResult, await self._call("POST", "/v2/hpke/seal", body, expect=HpkeSealResult)
+        )
 
     async def hpke_open(
         self,
@@ -192,4 +217,6 @@ class AsyncSealedOps(AsyncBase):
                 "pskId": _hpke_text(psk_id),
             }
         )
-        return cast(DecryptedBytes, await self._call("POST", "/v2/hpke/open", body))
+        return cast(
+            DecryptedBytes, await self._call("POST", "/v2/hpke/open", body, expect=DecryptedBytes)
+        )

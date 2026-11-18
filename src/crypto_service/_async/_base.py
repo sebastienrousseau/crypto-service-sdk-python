@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Connection pool, retries and deadlines of the asynchronous client."""
 
 from __future__ import annotations
@@ -123,6 +124,7 @@ class AsyncBase:
         path: str,
         body: Mapping[str, Any] | None = None,
         *,
+        expect: Any,
         wrapped: bool = True,
         auth: bool = True,
     ) -> Any:
@@ -130,7 +132,11 @@ class AsyncBase:
         headers = self._config.headers(auth=auth, has_body=content is not None)
         response = await self._send(method, path, content, headers)
         return _core.decode_response(
-            response.status_code, response.reason_phrase, response.content, wrapped=wrapped
+            response.status_code,
+            response.reason_phrase,
+            response.content,
+            wrapped=wrapped,
+            expected=expect,
         )
 
     async def request(
@@ -148,8 +154,12 @@ class AsyncBase:
         For routes without a typed method. ``body`` is sent as JSON;
         ``content`` is sent as it is, with the media type in ``headers``.
         Retries, timeouts and the deadline apply as for typed methods; a
-        missing response still raises :class:`TransportError`.
+        missing response still raises :class:`TransportError`. ``path``
+        is relative to ``base_url``: one with a scheme or a host, a
+        method that is not an HTTP token, or a header that is not
+        visible ASCII raises ``ValueError`` before anything is sent.
         """
+        _core.check_request_target(method, path)
         if body is not None:
             content = _core.encode_body(body)
         merged = self._config.headers(auth=auth, has_body=body is not None, extra=headers)

@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+<!-- SPDX-FileCopyrightText: 2026 Sebastien Rousseau -->
 
 # Architecture
 
@@ -12,6 +13,7 @@ client.hash(algorithm="sha256", data="abc")          # _async/_digest.py
        _send: loop over attempts                       # Deadline, delay_after_error / delay_after_status
          _attempt: asyncio.timeout(budget) + httpx     # one pooled httpx.AsyncClient per SDK client
        decode_response(status, reason, content)        # 3xx -> TransportError, 4xx/5xx -> ApiError(Problem), 2xx -> data
+         check_shape(data, HashResult)                 # _shape.py: required members and JSON types, else TransportError
   <- {"digest": "...", "algorithm": "sha256", "length": 32}
 ```
 
@@ -21,13 +23,14 @@ client.hash(algorithm="sha256", data="abc")          # _async/_digest.py
 | :--- | :--- |
 | `_core` | Sans-I/O rules: `Config` (validated, immutable, redacted `repr`), headers, the retry-safety table, backoff with full jitter, `Retry-After`, `Deadline`, JSON encoding and decoding |
 | `_problem` | Any error body to a `Problem`; non-problems become `about:blank` |
+| `_shape` | A decoded success value checked against its `types` result type |
 | `_async/_base` | `AsyncBase`: the httpx pool, the attempt loop, `request()` |
 | `_async/_meta`, `_digest`, `_symmetric`, `_keys`, `_pq`, `_sealed`, `_kms`, `_opaque` | One mixin per API area; each method builds a body and calls `_call` |
 | `_async/_client` | `AsyncClient`, the union of the mixins |
 | `_sync/*` | The same, generated: `Client` |
 | `types`, `encoding`, `errors` | Public types, encoding helpers, exceptions |
 
-Every rule that does not touch the network is in `_core` and
+Every rule that does not touch the network is in `_core`, `_shape` and
 `_problem`, so the two clients share it and it is tested once.
 
 ## Concurrency

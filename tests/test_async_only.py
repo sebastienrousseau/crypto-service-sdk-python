@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Behaviour only the asynchronous client has: cancellation and attempt scopes."""
 
 from __future__ import annotations

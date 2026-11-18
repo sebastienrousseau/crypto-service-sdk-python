@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Fails unless README.md follows the suite's SDK README template: a
 # centred plain-text h1, the template's 17 second-level headings in its

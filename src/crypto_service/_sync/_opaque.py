@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 # Generated from src/crypto_service/_async/_opaque.py by scripts/unasync.py.
 # Do not edit: change the async source and run `make unasync`.
 """OPAQUE (RFC 9807) registration and login, server side of the exchange.
@@ -39,7 +40,10 @@ class OpaqueOps(Base):
             }
         )
         path = "/v2/opaque/register/init"
-        return cast(OpaqueRegisterInitResult, self._call("POST", path, body))
+        return cast(
+            OpaqueRegisterInitResult,
+            self._call("POST", path, body, expect=OpaqueRegisterInitResult),
+        )
 
     def opaque_register_finish(
         self, *, credential_identifier: str, record: Hex, suite: OpaqueSuite | None = None
@@ -53,7 +57,10 @@ class OpaqueOps(Base):
             }
         )
         path = "/v2/opaque/register/finish"
-        return cast(OpaqueRegisterFinishResult, self._call("POST", path, body))
+        return cast(
+            OpaqueRegisterFinishResult,
+            self._call("POST", path, body, expect=OpaqueRegisterFinishResult),
+        )
 
     def opaque_login_init(
         self, *, credential_identifier: str, ke1: Hex, suite: OpaqueSuite | None = None
@@ -63,10 +70,16 @@ class OpaqueOps(Base):
             {"credentialIdentifier": credential_identifier, "ke1": to_hex(ke1), "suite": suite}
         )
         path = "/v2/opaque/login/init"
-        return cast(OpaqueLoginInitResult, self._call("POST", path, body, auth=False))
+        return cast(
+            OpaqueLoginInitResult,
+            self._call("POST", path, body, auth=False, expect=OpaqueLoginInitResult),
+        )
 
     def opaque_login_finish(self, *, session_id: str, ke3: Hex) -> OpaqueLoginFinishResult:
         """``POST /v2/opaque/login/finish``: a public route, no credentials are sent."""
         body = {"sessionId": session_id, "ke3": to_hex(ke3)}
         path = "/v2/opaque/login/finish"
-        return cast(OpaqueLoginFinishResult, self._call("POST", path, body, auth=False))
+        return cast(
+            OpaqueLoginFinishResult,
+            self._call("POST", path, body, auth=False, expect=OpaqueLoginFinishResult),
+        )

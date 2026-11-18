@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """The package version, read from the installed distribution metadata.
 
 ``pyproject.toml`` is the single source of truth; nothing else restates

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Hold every function to the complexity ceilings, against a baseline.
 
 The ceilings are per function: cyclomatic 10 (radon), cognitive 15

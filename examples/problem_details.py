@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Handle errors: RFC 9457 problem details, validation errors, transport errors."""
 
 from __future__ import annotations

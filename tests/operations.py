@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Every typed method, the request it must send and the value it returns.
 
 Each row: method name, keyword arguments, HTTP method, path, the JSON
@@ -188,3 +189,70 @@ OPS: tuple[Op, ...] = (
 PUBLIC = frozenset(
     {"/health", "/live", "/ready", "/v2/opaque/login/init", "/v2/opaque/login/finish"}
 )
+
+H = "00ff"
+B64 = "AA=="
+ALG = {"algorithm": "synthetic-alg"}
+KEYED = {"keyId": "local-1", "provider": "local"}
+
+#: A valid answer for each result type the typed methods declare: every
+#: required member, with the JSON type the API documents.
+SAMPLES: dict[object, object] = {
+    "RootInfo": {"id": "crypto-server", "title": "t", "description": "d", "version": "0.0.41",
+                 "license": "Apache-2.0 OR MIT", "url": "https://crypto.test", "details": "/v2"},
+    "HealthResult": {"status": "ok", "statusCode": 200, "uptime": 1.5},
+    "LiveResult": {"status": "alive", "uptime": 2},
+    "ReadyResult": {"status": "ready", "checks": {"accepting": True, "keyStore": True}},
+    "AlgorithmCatalogue": {name: ["a"] for name in ("encryption", "hashing", "kdf", "keyExchange",
+                                                   "mac", "postQuantum", "signing")},
+    "DoraCompliance": {"standard": "DORA", "article": "9", "status": "s", "timestamp": "t",
+                       "activePrimitivesCount": 3, "postQuantumPrimitivesCount": 1,
+                       "quantumResistanceRatio": 0.5, "cryptographicInventory": [{}],
+                       "algorithmDeprecationSchedule": [], "disclaimer": "d"},
+    "Cbom": {"bomFormat": "CycloneDX", "specVersion": "1.6", "serialNumber": "urn:uuid:x",
+             "version": 1, "metadata": {}, "components": [{"name": "c"}]},
+    "str": "synthetic text",
+    "AeadResult": {**ALG, "ciphertext": B64},
+    "PlaintextResult": {"plaintext": "p"},
+    "SealedResult": {**ALG, "sealed": B64},
+    "PasswordEncryptResult": {**ALG, "encrypted": B64},
+    "KeyWrapResult": {**ALG, "wrapped": B64},
+    "HashResult": {**ALG, "digest": H, "length": 2},
+    "MacResult": {**ALG, "mac": H},
+    "ValidResult": {"valid": True},
+    "AlgorithmValidResult": {**ALG, "valid": False},
+    "KdfResult": {**ALG, "derivedKey": H, "keyLength": 2, "salt": H},
+    "PasswordHashResult": {**ALG, "hash": H, "salt": H, "params": {"t": 2, "m": 19456, "p": 1},
+                           "phc": "$argon2id$"},
+    "GeneratedKey": {"keyId": K, "kid": "a", **ALG, "publicKey": H, "metadata": {"kid": "a"}},
+    "ExportedKey": {"keyId": K, **ALG, "privateKey": H},
+    "DeletedKey": {"keyId": K, "deleted": True},
+    "SignatureResult": {**ALG, "signature": H},
+    "StreamSignResult": {"count": 1, "signatures": [{"id": "a"}]},
+    "StreamVerifyResult": {"allValid": True, "count": 1, "validCount": 1, "results": [{}]},
+    "KeyPair": {**ALG, "keyId": K, "publicKey": H},
+    "HybridKeyPair": {**ALG, "keyId": K, "x25519PublicKey": H, "mlKemPublicKey": H},
+    "KemEncapsulation": {**ALG, "ciphertext": H, "sharedSecret": H},
+    "SharedSecret": {**ALG, "sharedSecret": H, "combiner": "c"},
+    "HybridEncapsulation": {**ALG, "combiner": "c", "x25519EphemeralPublic": H,
+                            "mlKemCiphertext": H, "sharedSecret": H},
+    "Iso20022Result": {"messageId": "M", "valid": True, "digestMatches": True,
+                       "classicalValid": True, "postQuantumValid": True},
+    "StreamEncryptResult": {**ALG, "ciphertext": B64},
+    "MultiStreamEncryptResult": {**ALG, "ciphertext": B64, "recipientCount": 1},
+    "MultiStreamDecryptResult": {"plaintext": "p", "recipientId": "a"},
+    "MultiRecipientResult": {**ALG, "ciphertext": B64, "recipients": [{}]},
+    "HpkeSealResult": {"encapsulatedKey": H, "ciphertext": H},
+    "DecryptedBytes": {"plaintext": "p", "hex": "70"},
+    "KmsKey": {**KEYED, **ALG, "usage": "encrypt", "enabled": True, "createdAt": "t",
+               "currentVersion": 1},
+    "KmsEncryptResult": {**KEYED, "ciphertext": "c", "keyVersion": 1, "context": {"a": "b"}},
+    "KmsDecryptResult": {**KEYED, "plaintext": "p", "hex": "70"},
+    "KmsWrapResult": {**KEYED, "wrappedKey": "w"},
+    "KmsUnwrapResult": {**KEYED, "unwrappedKey": H},
+    "KmsDataKey": {**KEYED, "plaintext": H, "ciphertext": "c"},
+    "OpaqueRegisterInitResult": {"response": H},
+    "OpaqueRegisterFinishResult": {"credentialIdentifier": "u", "status": "registered"},
+    "OpaqueLoginInitResult": {"ke2": H, "sessionId": "s"},
+    "OpaqueLoginFinishResult": {"sessionKey": H},
+}  # fmt: skip

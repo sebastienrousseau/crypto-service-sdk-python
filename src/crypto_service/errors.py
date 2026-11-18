@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """The SDK's exceptions and the RFC 9457 problem they carry.
 
 Every exception derives from :class:`CryptoServiceError`. A response
@@ -86,7 +87,8 @@ class ApiError(CryptoServiceError):
 class TransportError(CryptoServiceError):
     """No usable response: the connection failed, the request timed out,
     the overall deadline passed, the server redirected, or a success
-    response could not be decoded.
+    response could not be decoded or does not match the method's result
+    type (the message names the member, never its value).
 
     The underlying exception, when there is one, is ``__cause__``.
     """

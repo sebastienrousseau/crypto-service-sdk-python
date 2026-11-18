@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+<!-- SPDX-FileCopyrightText: 2026 Sebastien Rousseau -->
 
 # ADR 0003: Error model
 
@@ -26,7 +27,8 @@ with one base.
 - `TransportError` is raised when no usable response arrived: a
   connection error, a timeout (`timed_out=True`), the call's deadline
   passing (`timed_out=True`), a redirect (refused), or a 2xx body that
-  cannot be decoded. The underlying exception is `__cause__`.
+  cannot be decoded or, since 0.0.41, does not match the method's result
+  type. The underlying exception is `__cause__`.
 - Bad options raise `ValueError` at construction.
 - Messages and `repr` carry the status, the problem type and the title
   only. `detail` can echo request data, so it is reachable as an

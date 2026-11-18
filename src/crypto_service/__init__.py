@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Typed Python client for the Crypto Service REST API (crypto-server v2).
 
 The SDK is a thin client: every operation is an HTTP call to a

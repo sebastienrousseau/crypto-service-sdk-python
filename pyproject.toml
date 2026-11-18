@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 
 [build-system]
 requires = ["hatchling>=1.27"]
@@ -9,7 +10,7 @@ name = "crypto-service-sdk-python"
 # The single source of truth for the version: the package reads it back
 # with importlib.metadata, and scripts/verify-release-versions checks
 # every restatement against this line.
-version = "0.0.40"
+version = "0.0.41"
 description = "Typed async and sync Python client for the Crypto Service REST API (crypto-server v2)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -64,6 +65,17 @@ docs = [
   "pymdown-extensions>=11.0.1",
 ]
 sbom = ["cyclonedx-bom>=7.1"]
+
+# The lock (development and documentation tools) covers Python 3.11.5 and
+# newer: pymdown-extensions 13 needs 3.11.5, and a universal lock down to
+# 3.11.0 splits it into two versions, which Dependabot cannot update
+# (`uv lock --upgrade-package pymdown-extensions==13.1` failed on
+# 2026-11-16). The package itself still supports 3.11 (requires-python).
+[tool.uv]
+environments = ["python_full_version >= '3.11.5'"]
+# The build backend `uv build` uses, pinned so a release rebuilds bit for
+# bit later (docs/REPRODUCING.md); the wheel's WHEEL file names it.
+build-constraint-dependencies = ["hatchling==1.33.0"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/crypto_service"]

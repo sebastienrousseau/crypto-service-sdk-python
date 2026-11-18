@@ -1,18 +1,34 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Fuzz target bodies, free of atheris so the corpus replays under pytest.
 
 * ``problem``: :func:`crypto_service._problem.parse_problem` on any bytes
   must return a :class:`Problem` with the response's status and never
   raise.
 * ``response``: :func:`crypto_service._core.decode_response` on any
-  status and bytes may raise only :class:`ApiError` or
-  :class:`TransportError`.
+  status and bytes, checked against one of a few response types, may
+  raise only :class:`ApiError` or :class:`TransportError`.
 """
 
 from __future__ import annotations
 
-from crypto_service import ApiError, TransportError, _core
+from typing import Any
+
+from crypto_service import ApiError, TransportError, _core, types
 from crypto_service._problem import parse_problem
+
+#: The types the response target checks against: nothing, scalars,
+#: Literal and nested members, NotRequired members, lists and mappings.
+EXPECTED: tuple[object, ...] = (
+    Any,
+    str,
+    types.HashResult,
+    types.ReadyResult,
+    types.SharedSecret,
+    types.StreamSignResult,
+    types.KmsEncryptResult,
+    types.Cbom,
+)
 
 
 def _status(data: bytes, low: int, span: int) -> tuple[int, bytes]:
@@ -36,8 +52,9 @@ def problem(data: bytes) -> None:
 def response(data: bytes) -> None:
     status, body = _status(data, 200, 400)
     wrapped = bool(data[:1]) and data[0] & 1 == 1
+    expected = EXPECTED[data[1] % len(EXPECTED)] if len(data) > 1 else Any
     try:
-        _core.decode_response(status, "Reason", body, wrapped=wrapped)
+        _core.decode_response(status, "Reason", body, wrapped=wrapped, expected=expected)
     except ApiError as error:
         _require(error.status == status >= 400, "ApiError for the wrong status")
     except TransportError:

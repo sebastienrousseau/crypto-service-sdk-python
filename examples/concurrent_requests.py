@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Many requests at once with the async client: one pool, shared by every task.
 
 The server meters each principal (60 requests a minute by default), so
