@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Runs every example in examples/ against the server at
 # CRYPTO_SERVICE_URL with CRYPTO_SERVICE_API_KEY, and fails when one

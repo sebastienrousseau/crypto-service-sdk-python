@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Service description, probes, the algorithm catalogue and compliance documents."""
 
 from __future__ import annotations

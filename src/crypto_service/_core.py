@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Transport-agnostic request logic shared by the async and sync clients.
 
 Nothing here performs I/O: it validates options, builds headers, encodes

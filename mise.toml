@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Pinned toolchain: `mise install` provides these; CI installs the same
 # versions. The Python floor is 3.11 (pyproject.toml); 3.14 is the

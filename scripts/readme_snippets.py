@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Run every fenced code block in README.md, in order, as a user would.
 
 A fresh virtual environment comes first. ``sh`` blocks run under bash

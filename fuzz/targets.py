@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Fuzz target bodies, free of atheris so the corpus replays under pytest.
 
 * ``problem``: :func:`crypto_service._problem.parse_problem` on any bytes

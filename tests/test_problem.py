@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Problem parsing: every error body becomes a problem, and nothing raises."""
 
 from __future__ import annotations

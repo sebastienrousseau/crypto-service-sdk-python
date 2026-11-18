@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Fixtures that run each client test against both clients.
 
 ``kind`` is ``"async"`` or ``"sync"``; ``make_client`` builds that client

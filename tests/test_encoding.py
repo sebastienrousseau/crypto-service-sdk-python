@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Encoding helpers: bytes to the API's hex and base64, and back."""
 
 from __future__ import annotations

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """The conformance kit: integrity always, the vectors against a live server.
 
 The live part needs ``CRYPTO_SERVICE_URL``, ``CRYPTO_SERVICE_API_KEY``

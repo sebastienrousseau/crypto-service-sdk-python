@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Encrypt and decrypt with XChaCha20-Poly1305 on the server, under a caller-held key.
 
 The key is 32 random bytes from the operating system; the SDK sends it

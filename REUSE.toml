@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Machine-readable licensing, per the REUSE specification (`reuse lint`
-# runs in the docs-lint workflow). Source files carry an SPDX header; this
-# file adds the copyright line to every file and covers the files whose
-# format has no room for a header.
+# runs in the docs-lint workflow). Source files carry an SPDX header with
+# their licence and copyright lines; this file restates the copyright for
+# every file and covers the files whose format has no room for a header.
 
 version = 1
 SPDX-PackageName = "crypto-service-sdk-python"

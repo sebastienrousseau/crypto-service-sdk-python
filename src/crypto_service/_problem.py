@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """RFC 9457 problem parsing: any error body becomes a :class:`Problem`."""
 
 from __future__ import annotations

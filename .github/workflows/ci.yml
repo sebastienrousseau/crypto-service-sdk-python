@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # Lint (version files, the generated blocking client, ruff, mypy
 # --strict, the complexity ceilings, shellcheck, pip-audit), the unit

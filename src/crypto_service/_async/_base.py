@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Connection pool, retries and deadlines of the asynchronous client."""
 
 from __future__ import annotations

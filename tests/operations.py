@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Every typed method, the request it must send and the value it returns.
 
 Each row: method name, keyword arguments, HTTP method, path, the JSON

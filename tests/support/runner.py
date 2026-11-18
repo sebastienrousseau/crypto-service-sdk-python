@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Run the conformance kit against a live crypto-server through the SDK.
 
 Each vector goes through the typed :class:`~crypto_service.AsyncClient`

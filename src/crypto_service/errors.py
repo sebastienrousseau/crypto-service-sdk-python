@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """The SDK's exceptions and the RFC 9457 problem they carry.
 
 Every exception derives from :class:`CryptoServiceError`. A response

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Checks that a decoded success response has the types the API documents.
 
 The typed methods return :mod:`crypto_service.types` views of the JSON

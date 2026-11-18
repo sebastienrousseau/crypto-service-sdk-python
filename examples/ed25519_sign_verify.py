@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Sign with a server-held Ed25519 key, by keyId, and verify the signature.
 
 The private key never leaves the server: generation returns a keyId and

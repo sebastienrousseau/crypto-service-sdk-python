@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """The transport-agnostic rules: options, headers, retry decisions, decoding."""
 
 from __future__ import annotations

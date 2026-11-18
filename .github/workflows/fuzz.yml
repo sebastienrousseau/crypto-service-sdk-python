@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 #
 # atheris (libFuzzer for Python) on the problem-body parser and the
 # success-response decoder, 60 seconds per target on every pull request

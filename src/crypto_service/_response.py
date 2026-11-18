@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """The answer to a raw :meth:`AsyncClient.request` call."""
 
 from __future__ import annotations

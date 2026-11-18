@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Generate the blocking client (src/crypto_service/_sync) from the async one.
 
 Each module in ``_async`` is rewritten token by token (``async def`` to
@@ -45,16 +46,18 @@ RULES: tuple[tuple[str, str], ...] = (
 
 def header(name: str) -> str:
     return (
-        # Split so REUSE does not read this literal as this file's licence.
+        # Split so REUSE does not read these literals as this file's header.
         "# SPDX"
         "-License-Identifier: Apache-2.0 OR MIT\n"
+        "# SPDX"
+        "-FileCopyrightText: 2026 Sebastien Rousseau\n"
         f"# Generated from src/crypto_service/_async/{name} by scripts/unasync.py.\n"
         "# Do not edit: change the async source and run `make unasync`.\n"
     )
 
 
 def transform(name: str, text: str) -> str:
-    body = text.split("\n", 1)[1]  # drop the SPDX line; the header restates it
+    body = re.sub(r"\A(?:# SPDX-[^\n]*\n)+", "", text)  # the header restates the SPDX lines
     for pattern, replacement in RULES:
         body = re.sub(pattern, replacement, body)
     return header(name) + body

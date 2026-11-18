@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """atheris entry point: the RFC 9457 problem-body parser.
 
 Run: python fuzz/fuzz_problem.py -max_total_time=60 fuzz/corpus/problem

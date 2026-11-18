@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """OPAQUE (RFC 9807) registration and login, server side of the exchange.
 
 The client side of OPAQUE (blinding, KE1, KE3) is cryptography this SDK

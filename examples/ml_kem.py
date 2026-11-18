@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """ML-KEM-768: encapsulate to a server-held key's public key, decapsulate by keyId.
 
 Both sides arrive at the same shared secret; the decapsulation key stays

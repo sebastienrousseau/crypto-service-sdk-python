@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
 """Post-quantum KEMs (ML-KEM, hybrid X25519 + ML-KEM) and signatures (ML-DSA, SLH-DSA)."""
 
 from __future__ import annotations
