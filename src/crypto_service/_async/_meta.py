@@ -22,15 +22,21 @@ class AsyncMetaOps(AsyncBase):
 
     async def root(self) -> RootInfo:
         """``GET /``: the service description (not wrapped in ``data``)."""
-        return cast(RootInfo, await self._call("GET", "/", wrapped=False))
+        return cast(RootInfo, await self._call("GET", "/", wrapped=False, expect=RootInfo))
 
     async def health(self) -> HealthResult:
         """``GET /health``, a public probe: no credentials are sent."""
-        return cast(HealthResult, await self._call("GET", "/health", wrapped=False, auth=False))
+        return cast(
+            HealthResult,
+            await self._call("GET", "/health", wrapped=False, auth=False, expect=HealthResult),
+        )
 
     async def live(self) -> LiveResult:
         """``GET /live``, a public probe: no credentials are sent."""
-        return cast(LiveResult, await self._call("GET", "/live", wrapped=False, auth=False))
+        return cast(
+            LiveResult,
+            await self._call("GET", "/live", wrapped=False, auth=False, expect=LiveResult),
+        )
 
     async def ready(self) -> ReadyResult:
         """``GET /ready``, a public probe: no credentials are sent.
@@ -38,16 +44,25 @@ class AsyncMetaOps(AsyncBase):
         A server that is not ready answers 503, raised as
         :class:`~crypto_service.ApiError` (and retried when retries are on).
         """
-        return cast(ReadyResult, await self._call("GET", "/ready", wrapped=False, auth=False))
+        return cast(
+            ReadyResult,
+            await self._call("GET", "/ready", wrapped=False, auth=False, expect=ReadyResult),
+        )
 
     async def algorithms(self) -> AlgorithmCatalogue:
         """``GET /v2/algorithms``: every algorithm name by category."""
-        return cast(AlgorithmCatalogue, await self._call("GET", "/v2/algorithms"))
+        return cast(
+            AlgorithmCatalogue, await self._call("GET", "/v2/algorithms", expect=AlgorithmCatalogue)
+        )
 
     async def get_dora_compliance(self) -> DoraCompliance:
         """``GET /v2/compliance/dora``: the DORA Article 9 and 13 self-assessment."""
-        return cast(DoraCompliance, await self._call("GET", "/v2/compliance/dora"))
+        return cast(
+            DoraCompliance, await self._call("GET", "/v2/compliance/dora", expect=DoraCompliance)
+        )
 
     async def get_cbom(self) -> Cbom:
         """``GET /v2/compliance/cbom``: the CycloneDX 1.6 CBOM, not wrapped in ``data``."""
-        return cast(Cbom, await self._call("GET", "/v2/compliance/cbom", wrapped=False))
+        return cast(
+            Cbom, await self._call("GET", "/v2/compliance/cbom", wrapped=False, expect=Cbom)
+        )

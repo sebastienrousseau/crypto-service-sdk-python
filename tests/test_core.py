@@ -11,9 +11,11 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from crypto_service import ApiError, RetryOptions, TransportError, _core
+from crypto_service import ApiError, RetryOptions, TransportError, _core, types
+from crypto_service._shape import check_shape
 
 RETRY = RetryOptions(max_retries=3)
+TRACEPARENT = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
 
 
 def config(**overrides: object) -> _core.Config:
@@ -56,6 +58,86 @@ def test_header_values_are_checked(name: str, value: str) -> None:
     assert value not in str(caught.value) or value == ""
 
 
+@pytest.mark.parametrize(
+    "value",
+    [" synthetic", "synthetic ", "k\tey\x7f", "kl\u00fcssel", "\u043a\u043b\u044e\u0447", "a\x01b"],
+)
+def test_api_key_is_visible_ascii(value: str) -> None:
+    with pytest.raises(ValueError, match="api_key") as caught:
+        config(api_key=value)
+    assert value not in str(caught.value)
+
+
+@pytest.mark.parametrize("value", ["synthetic-api-key", "k!#$%&'*+-.^_`|~{}[]<>@", "a b\tc"])
+def test_api_key_accepts_visible_ascii(value: str) -> None:
+    assert config(api_key=value).api_key == value
+
+
+@pytest.mark.parametrize("value", ["a b", "a,b", "a=b", "=", "eyJ.\u00e9", "a;b", "Bearer x"])
+def test_token_is_token68(value: str) -> None:
+    with pytest.raises(ValueError, match="token") as caught:
+        config(token=value)
+    assert value not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "value", ["synthetic.jwt", "eyJhbGciOi.eyJzdWIiOi.c2lnbmF0dXJl-_", "a+/b~==", "abc="]
+)
+def test_token_accepts_token68(value: str) -> None:
+    assert config(token=value).token == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "00-tp",
+        "00-0AF7651916CD43DD8448EB211C80319C-b7ad6b7169203331-01",
+        "00-00000000000000000000000000000000-b7ad6b7169203331-01",
+        "00-0af7651916cd43dd8448eb211c80319c-0000000000000000-01",
+        "ff-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01 ",
+    ],
+)
+def test_traceparent_follows_w3c_trace_context(value: str) -> None:
+    with pytest.raises(ValueError, match="traceparent"):
+        config(traceparent=value)
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("GET", "https://elsewhere.test/v2/hash"),
+        ("GET", "//elsewhere.test/v2/hash"),
+        ("GET", "elsewhere.test:443/v2/hash"),
+        ("GET", "/v2/hash\r\nx: y"),
+        ("GET", "/v2/has h"),
+        ("GE T", "/v2/hash"),
+        ("", "/v2/hash"),
+        ("GET\n", "/v2/hash"),
+    ],
+)
+def test_raw_request_target_is_checked(method: str, path: str) -> None:
+    with pytest.raises(ValueError, match=r"^(method|path) "):
+        _core.check_request_target(method, path)
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [("GET", "/v2/hash"), ("POST", "v2/hash"), ("PROPFIND", "/metrics?x=1"), ("GET", "/")],
+)
+def test_raw_request_target_accepts_relative_paths(method: str, path: str) -> None:
+    _core.check_request_target(method, path)
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [{"x-h": "a\r\nb: c"}, {"x-h": "\u00e9"}, {"x h": "v"}, {"": "v"}, {"x-h:": "v"}],
+)
+def test_extra_headers_are_checked(headers: dict[str, str]) -> None:
+    with pytest.raises(ValueError, match="header"):
+        config().headers(auth=True, has_body=False, extra=headers)
+
+
 @pytest.mark.parametrize(("timeout", "deadline"), [(0, None), (-1, None), (1, 0), (None, -2)])
 def test_timeouts_must_be_positive(timeout: float | None, deadline: float | None) -> None:
     with pytest.raises(ValueError, match="positive"):
@@ -78,11 +160,11 @@ def test_config_defaults_and_repr() -> None:
 
 
 def test_headers() -> None:
-    cfg = config(api_key="k", token="t", traceparent="00-tp")
+    cfg = config(api_key="k", token="t", traceparent=TRACEPARENT)
     headers = cfg.headers(auth=True, has_body=True, extra={"x-extra": "1"})
     assert headers["x-api-key"] == "k"
     assert headers["authorization"] == "Bearer t"
-    assert headers["traceparent"] == "00-tp"
+    assert headers["traceparent"] == TRACEPARENT
     assert headers["content-type"] == "application/json"
     assert headers["x-extra"] == "1"
     public = cfg.headers(auth=False, has_body=False)
@@ -248,3 +330,54 @@ def test_backoff_never_exceeds_the_cap(attempt: int, initial: float, cap: float)
 def test_retry_after_never_raises(header: str) -> None:
     seconds = _core.retry_after_seconds(header, time.time())
     assert seconds is None or seconds >= 0
+
+
+SHAPES_OK = [
+    (types.HealthResult, {"status": "ok", "statusCode": 200, "uptime": 3}),
+    (types.HealthResult, {"status": "ok", "statusCode": 200, "uptime": 3.5, "newMember": [1]}),
+    (types.SharedSecret, {"algorithm": "a", "sharedSecret": "00"}),
+    (types.KmsEncryptResult, {"keyId": "k", "provider": "p", "ciphertext": "c", "context": {}}),
+    (types.Cbom, {"bomFormat": "CycloneDX", "specVersion": "1.6", "serialNumber": "s",
+                  "version": 1, "metadata": {"any": [None]}, "components": []}),
+    (str, "text"),
+]  # fmt: skip
+
+
+@pytest.mark.parametrize(("expected", "value"), SHAPES_OK)
+def test_check_shape_accepts_the_documented_types(expected: object, value: object) -> None:
+    assert check_shape(value, expected) is value
+
+
+SHAPES_BAD = [
+    (types.HealthResult, [], "data"),
+    (types.HealthResult, {"status": "ok", "statusCode": 200}, "data.uptime"),
+    (types.HealthResult, {"status": "degraded", "statusCode": 200, "uptime": 1}, "data.status"),
+    (types.HealthResult, {"status": "ok", "statusCode": True, "uptime": 1}, "data.statusCode"),
+    (types.HealthResult, {"status": "ok", "statusCode": 200.0, "uptime": 1}, "data.statusCode"),
+    (types.HealthResult, {"status": "ok", "statusCode": 200, "uptime": "1"}, "data.uptime"),
+    (types.ReadyResult, {"status": "ready", "checks": {"accepting": 1, "keyStore": True}},
+     "data.checks.accepting"),
+    (types.SharedSecret, {"algorithm": "a", "sharedSecret": "00", "combiner": 7}, "data.combiner"),
+    (types.AlgorithmCatalogue, {"encryption": [], "hashing": [], "kdf": [], "keyExchange": [],
+                                "mac": [], "postQuantum": [], "signing": ["ed25519", 3]},
+     "data.signing[1]"),
+    (types.KmsEncryptResult, {"keyId": "k", "provider": "p", "ciphertext": "c",
+                              "context": {"a": 1}}, "data.context.a"),
+    (types.KmsEncryptResult, {"keyId": "k", "provider": "p", "ciphertext": "c", "context": []},
+     "data.context"),
+    (types.StreamSignResult, {"count": 1, "signatures": {}}, "data.signatures"),
+    (types.StreamSignResult, {"count": 1, "signatures": ["x"]}, "data.signatures[0]"),
+    (str, {"plaintext": "secret-plaintext"}, "data"),
+]  # fmt: skip
+
+
+@pytest.mark.parametrize(("expected", "value", "where"), SHAPES_BAD)
+def test_check_shape_names_the_member_not_the_value(
+    expected: object, value: object, where: str
+) -> None:
+    with pytest.raises(TransportError, match="does not match the API") as caught:
+        check_shape(value, expected)
+    message = str(caught.value)
+    assert message.endswith(f"at {where}")
+    assert "secret" not in message
+    assert "degraded" not in message
