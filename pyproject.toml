@@ -9,7 +9,7 @@ name = "crypto-service-sdk-python"
 # The single source of truth for the version: the package reads it back
 # with importlib.metadata, and scripts/verify-release-versions checks
 # every restatement against this line.
-version = "0.0.40"
+version = "0.0.41"
 description = "Typed async and sync Python client for the Crypto Service REST API (crypto-server v2)."
 readme = "README.md"
 requires-python = ">=3.11"

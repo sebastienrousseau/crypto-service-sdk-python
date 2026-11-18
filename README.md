@@ -62,7 +62,7 @@
 ### As a Python library
 
 ```sh
-pip install crypto-service-sdk-python==0.0.40
+pip install crypto-service-sdk-python==0.0.41
 python -c 'import crypto_service; print(crypto_service.USER_AGENT)'
 ```
 
