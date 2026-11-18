@@ -65,6 +65,14 @@ docs = [
 ]
 sbom = ["cyclonedx-bom>=7.1"]
 
+# The lock (development and documentation tools) covers Python 3.11.5 and
+# newer: pymdown-extensions 13 needs 3.11.5, and a universal lock down to
+# 3.11.0 splits it into two versions, which Dependabot cannot update
+# (`uv lock --upgrade-package pymdown-extensions==13.1` failed on
+# 2026-11-16). The package itself still supports 3.11 (requires-python).
+[tool.uv]
+environments = ["python_full_version >= '3.11.5'"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/crypto_service"]
 
